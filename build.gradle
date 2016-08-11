@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url 'http://www.sparetimelabs.com/maven2'
+    }
+}
+
+dependencies {
+    compile 'com.sparetimelabs:purejavacomm:0.0.17'
+}

@@ -1,6 +1,6 @@
 /*
  * JPty - A small PTY interface for Java.
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,14 +18,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package jpty.linux;
+package jpty.macosx;
 
+import java.util.Arrays;
+import java.util.List;
 
 import jpty.JPty;
 import jpty.JPty.JPtyInterface;
 import jpty.WinSize;
-import jtermios.Termios;
-import jtermios.linux.JTermiosImpl.Linux_C_lib.termios;
+import jtermios.macosx.JTermiosImpl.MacOSX_C_lib.termios;
 
 import com.sun.jna.Native;
 import com.sun.jna.StringArray;
@@ -33,26 +34,25 @@ import com.sun.jna.Structure;
 
 
 /**
- * Provides a {@link JPtyInterface} implementation for Linux.
+ * Provides a {@link JPtyInterface} implementation for MacOSX.
  */
 public class JPtyImpl implements JPtyInterface
 {
   // INNER TYPES
 
-  public interface Linux_C_lib extends com.sun.jna.Library
+  public interface MacOSX_C_lib extends com.sun.jna.Library
   {
+    int execv( String command, StringArray argv );
+
     int execve( String command, StringArray argv, StringArray env );
 
-    int ioctl( int fd, int cmd, winsize arg );
+    int forkpty( int[] amaster, byte[] name, termios termp, winsize winp );
+
+    int ioctl( int fd, int cmd, winsize data );
 
     int kill( int pid, int signal );
 
     int waitpid( int pid, int[] stat, int options );
-  }
-
-  public interface Linux_Util_lib extends com.sun.jna.Library
-  {
-    int forkpty( int[] amaster, byte[] name, termios termp, winsize winp );
   }
 
   public static class winsize extends Structure
@@ -81,35 +81,45 @@ public class JPtyImpl implements JPtyInterface
       winSize.ws_xpixel = ws_xpixel;
       winSize.ws_ypixel = ws_ypixel;
     }
+
+    protected List getFieldOrder()
+    {
+      String[] fields = new String[] {
+        "ws_row",
+        "ws_col",
+        "ws_xpixel",
+        "ws_ypixel"
+      };
+
+      return Arrays.asList(fields);
+    }
   }
 
   // CONSTANTS
 
-  private static final int TIOCGWINSZ = 0x00005413;
-  private static final int TIOCSWINSZ = 0x00005414;
+  private static final int TIOCGWINSZ = 0x40087468;
+  private static final int TIOCSWINSZ = 0x80087467;
 
   // VARIABLES
 
-  private static Linux_C_lib m_Clib = ( Linux_C_lib )Native.loadLibrary( "c", Linux_C_lib.class );
+  private static MacOSX_C_lib m_Clib = ( MacOSX_C_lib )Native.loadLibrary( "c", MacOSX_C_lib.class );
 
-  private static Linux_Util_lib m_Utillib = ( Linux_Util_lib )Native.loadLibrary( "util", Linux_Util_lib.class );
-
-  // CONSTRUCTORS
+  // CONSTUCTORS
 
   /**
-   * Creates anew {@link JPtyImpl} instance.
+   * Creates a new {@link JPtyImpl} instance.
    */
   public JPtyImpl()
   {
-    JPty.ONLCR = 0x04;
+    JPty.ONLCR = 0x02;
 
-    JPty.VINTR = 0;
-    JPty.VQUIT = 1;
-    JPty.VERASE = 2;
-    JPty.VKILL = 3;
+    JPty.VERASE = 3;
+    JPty.VWERASE = 4;
+    JPty.VKILL = 5;
+    JPty.VREPRINT = 6;
+    JPty.VINTR = 8;
+    JPty.VQUIT = 9;
     JPty.VSUSP = 10;
-    JPty.VREPRINT = 12;
-    JPty.VWERASE = 14;
 
     JPty.ECHOKE = 0x01;
     JPty.ECHOCTL = 0x40;
@@ -121,16 +131,16 @@ public class JPtyImpl implements JPtyInterface
   public int execve( String command, String[] argv, String[] env )
   {
     StringArray argvp = ( argv == null ) ? new StringArray( new String[] { command } ) : new StringArray( argv );
-    StringArray envp = ( env == null ) ? new StringArray( new String[0] ) : new StringArray( env );
+    StringArray envp = ( env == null ) ? null : new StringArray( env );
     return m_Clib.execve( command, argvp, envp );
   }
 
   @Override
-  public int forkpty( int[] amaster, byte[] name, Termios term, WinSize win )
+  public int forkpty( int[] amaster, byte[] name, jtermios.Termios term, WinSize win )
   {
     termios termp = ( term == null ) ? null : new termios( term );
     winsize winp = ( win == null ) ? null : new winsize( win );
-    return m_Utillib.forkpty( amaster, name, termp, winp );
+    return m_Clib.forkpty( amaster, name, termp, winp );
   }
 
   @Override

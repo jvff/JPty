@@ -1,6 +1,6 @@
 /*
  * JPty - A small PTY interface for Java.
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,6 +20,8 @@
  */
 package jpty.freebsd;
 
+import java.util.Arrays;
+import java.util.List;
 
 import jpty.JPty;
 import jpty.JPty.JPtyInterface;
@@ -80,6 +82,18 @@ public class JPtyImpl implements JPtyInterface
       winSize.ws_row = ws_row;
       winSize.ws_xpixel = ws_xpixel;
       winSize.ws_ypixel = ws_ypixel;
+    }
+
+    protected List getFieldOrder()
+    {
+      String[] fields = new String[] {
+        "ws_row",
+        "ws_col",
+        "ws_xpixel",
+        "ws_ypixel"
+      };
+
+      return Arrays.asList(fields);
     }
   }
 
