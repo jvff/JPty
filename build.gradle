@@ -10,4 +10,6 @@ repositories {
 
 dependencies {
     compile 'com.sparetimelabs:purejavacomm:0.0.17'
+
+    testCompile 'junit:junit:4.12'
 }
