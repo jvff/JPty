@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'maven-publish'
 
 repositories {
     mavenCentral()
@@ -12,4 +13,22 @@ dependencies {
     compile 'com.sparetimelabs:purejavacomm:0.0.17'
 
     testCompile 'junit:junit:4.12'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.github.jawi'
+            artifactId 'jpty'
+            version '0.1.1'
+
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            url '/localm2/repo'
+        }
+    }
 }
