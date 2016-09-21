@@ -27,8 +27,6 @@ publishing {
     }
 
     repositories {
-        maven {
-            url '/localm2/repo'
-        }
+        mavenLocal()
     }
 }
